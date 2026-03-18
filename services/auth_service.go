@@ -1,7 +1,14 @@
 package services
 
 import (
+	"context"
+	"errors"
+	"time"
+
+	"github.com/str122-xyz/gin-firebase-backend/config"
+	"github.com/str122-xyz/gin-firebase-backend/models"
 	"github.com/str122-xyz/gin-firebase-backend/repositories"
+	"gorm.io/gorm"
 )
 
 type AuthService struct {
@@ -10,4 +17,57 @@ type AuthService struct {
 
 func NewAuthService() *AuthService {
 	return &AuthService{userRepo: repositories.NewUserRepository()}
+}
+
+// VerifyFirebaseToken verifikasi token dari Firebase,
+func (s *AuthService) VerifyFirebaseToken(firebaseToken string) (string, *models.User, error) {
+	// 1. Verifikasi Firebase ID Token ke server Google
+	token, err := config.FirebaseAuth.VerifyIDToken(context.Background(), firebaseToken)
+	if err != nil {
+		return "", nil, errors.New("firebase token tidak valid atau kadaluarsa")
+	}
+
+	// 2. Cek apakah email sudah diverifikasi
+	emailVerified, _ := token.Claims["email_verified"].(bool)
+	if !emailVerified {
+		return "", nil, errors.New("EMAIL NOT VERIFIED")
+	}
+
+	// 3. Ambil data dari claims Firebase token
+	uid := token.UID
+	email, _ := token.Claims["email"].(string)
+	name, _ := token.Claims["name"].(string)
+
+	// 4. Cari user di database, buat jika belum ada (first time login)
+	user, err := s.userRepo.FindByFirebaseUID(uid)
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		// User pertama kali login buat user baru
+		now := time.Now().Unix()
+		user = &models.User{
+			FirebaseUID:   uid,
+			Email:         email,
+			Name:          name,
+			Role:          "user",
+			EmailVerified: true,
+			LastLoginAt:   &now,
+		}
+		if err := s.userRepo.Create(user); err != nil {
+			return "", nil, errors.New("gagal membuat user baru")
+		}
+	} else if err != nil {
+		return "", nil, errors.New("error mengambil data user")
+	} else {
+		// Update last login
+		now := time.Now().Unix()
+		user.LastLoginAt = &now
+		user.EmailVerified = true
+		s.userRepo.Update(user)
+	}
+
+	// 5. Generate Backend JWT Token
+	jwtToken, err := s.generateJWT(user)
+	if err != nil {
+		return "", nil, errors.New("gagal membuat token")
+	}
+	return jwtToken, user, nil
 }
