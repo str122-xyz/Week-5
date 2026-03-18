@@ -27,3 +27,13 @@ func (r *UserRepository) FindByEmail(email string) (*models.User, error) {
 	result := config.DB.Where("email = ?", email).First(&user)
 	return &user, result.Error
 }
+
+// Create menyimpan user baru ke database
+func (r *UserRepository) Create(user *models.User) error {
+	return config.DB.Create(user).Error
+}
+
+// Update memperbarui data user
+func (r *UserRepository) Update(user *models.User) error {
+	return config.DB.Save(user).Error
+}
