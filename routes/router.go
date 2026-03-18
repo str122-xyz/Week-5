@@ -47,4 +47,14 @@ func SetupRouter() *gin.Engine {
 	// GET semua user terautentikasi bisa akses
 	products.GET("", productHandler.GetAll)
 	products.GET("/:id", productHandler.GetByID)
+
+	// Create, Update, Delete hanya untuk admin
+	adminProducts := products.Group("")
+	adminProducts.Use(middleware.AdminOnly())
 	
+	adminProducts.POST("", productHandler.Create)
+	adminProducts.PUT("/:id", productHandler.Update)
+	adminProducts.DELETE("/:id", productHandler.Delete)
+
+	return r
+}
