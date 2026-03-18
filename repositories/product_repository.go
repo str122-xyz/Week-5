@@ -32,3 +32,25 @@ func (r *ProductRepository) FindAll(page, limit int, category string) ([]models.
 
 	return products, total, result.Error
 }
+
+// FindByID mengambil satu produk berdasarkan ID
+func (r *ProductRepository) FindByID(id uint) (*models.Product, error) {
+	var product models.Product
+	result := config.DB.First(&product, id)
+	return &product, result.Error
+}
+
+// Create menyimpan produk baru
+func (r *ProductRepository) Create(product *models.Product) error {
+	return config.DB.Create(product).Error
+}
+
+// Update memperbarui produk
+func (r *ProductRepository) Update(product *models.Product) error {
+	return config.DB.Save(product).Error
+}
+
+// Delete soft-delete produk (tidak hapus permanen dari DB)
+func (r *ProductRepository) Delete(id uint) error {
+	return config.DB.Delete(&models.Product{}, id).Error
+}
