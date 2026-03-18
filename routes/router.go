@@ -20,3 +20,31 @@ func SetupRouter() *gin.Engine {
 		}
 		c.Next()
 	})
+
+	// Init handlers
+	authHandler := handlers.NewAuthHandler()
+	productHandler := handlers.NewProductHandler()
+
+	// API v1 group
+	v1 := r.Group("/v1")
+
+	// Health check (tidak perlu auth)
+	v1.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok", "service": "gin-firebase-backend"})
+	})
+
+	// Auth routes (public)
+	auth := v1.Group("/auth")
+	auth.POST("/verify-token", authHandler.VerifyToken)
+
+	// Protected routes
+	protected := v1.Group("")
+	protected.Use(middleware.AuthMiddleware())
+
+	// Products
+	products := protected.Group("/products")
+	
+	// GET semua user terautentikasi bisa akses
+	products.GET("", productHandler.GetAll)
+	products.GET("/:id", productHandler.GetByID)
+	
