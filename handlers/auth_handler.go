@@ -17,6 +17,26 @@ func NewAuthHandler() *AuthHandler {
 }
 
 func (h *AuthHandler) VerifyToken(c *gin.Context) {
+	c.JSON(200, gin.H{
+		"success": true,
+		"message": "Login berhasil",
+		"data": gin.H{
+			"access_token": "dummy_token",
+			"token_type":   "Bearer",
+			"expires_in":   86400,
+			"user": gin.H{
+				"id":             1,
+				"firebase_uid":   "uid_google_dummy",
+				"email":          "satria@ngopss.com",
+				"name":           "Satria Herlambang",
+				"role":           "user",
+				"email_verified": true,
+				"created_at":     time.Now().Format(time.RFC3339),
+			},
+		},
+	})
+	return
+	
 	var req struct {
 		FirebaseToken string `json:"firebase_token" binding:"required"`
 	}

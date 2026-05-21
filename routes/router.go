@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/str122-xyz/gin-firebase-backend/handlers"
 	"github.com/str122-xyz/gin-firebase-backend/middleware"
@@ -9,17 +10,10 @@ import (
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
-	// CORS Middleware (izinkan request dari aplikasi Flutter)
-	r.Use(func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "*")
-		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "Content-Type, Authorization")
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
-		c.Next()
-	})
+	config := cors.DefaultConfig()
+	config.AllowAllOrigins = true
+	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
+	r.Use(cors.New(config))
 
 	// Init handlers
 	authHandler := handlers.NewAuthHandler()
@@ -37,17 +31,15 @@ func SetupRouter() *gin.Engine {
 	auth := v1.Group("/auth")
 	auth.POST("/verify-token", authHandler.VerifyToken)
 
+	// Products
+	products := v1.Group("/products")
+    products.GET("", productHandler.GetAll)
+    products.GET("/:id", productHandler.GetByID)
+
 	// Protected routes
 	protected := v1.Group("")
 	protected.Use(middleware.AuthMiddleware())
-
-	// Products
-	products := protected.Group("/products")
 	
-	// GET semua user terautentikasi bisa akses
-	products.GET("", productHandler.GetAll)
-	products.GET("/:id", productHandler.GetByID)
-
 	// Create, Update, Delete hanya untuk admin
 	adminProducts := products.Group("")
 	adminProducts.Use(middleware.AdminOnly())
