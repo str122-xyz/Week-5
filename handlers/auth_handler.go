@@ -21,6 +21,7 @@ func (h *AuthHandler) VerifyToken(c *gin.Context) {
 		FirebaseToken string `json:"firebase_token" binding:"required"`
 	}
 
+	// 1. Cek format request
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
@@ -29,6 +30,7 @@ func (h *AuthHandler) VerifyToken(c *gin.Context) {
 		return
 	}
 
+	// 2. Verifikasi ke Firebase
 	jwtToken, user, err := h.authService.VerifyFirebaseToken(req.FirebaseToken)
 	if err != nil {
 		if err.Error() == "EMAIL NOT VERIFIED" {
@@ -47,6 +49,7 @@ func (h *AuthHandler) VerifyToken(c *gin.Context) {
 		return
 	}
 
+	// 3. Sukses, kirim data user asli
 	expireHours := 24
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
