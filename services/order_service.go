@@ -62,3 +62,15 @@ func (s *OrderService) Checkout(userID string, address string, payment string) (
 	tx.Commit()
 	return &order, nil
 }
+
+	// mengambil riwayat pesanan berdasarkan ID User
+func (s *OrderService) GetMyOrders(userID string) ([]models.Order, error) {
+	var orders []models.Order
+	
+	// panggil config.DB untuk mengambil data. 
+	// preload("Items.Product") fungsinya untuk detail kopi yang dibeli ikut ketarik.
+	// order("created_at desc") untuk pesanan paling baru muncul di paling atas.
+	err := config.DB.Preload("Items.Product").Where("user_id = ?", userID).Order("created_at desc").Find(&orders).Error
+	
+	return orders, err
+}

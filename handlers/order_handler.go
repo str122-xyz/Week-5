@@ -35,3 +35,21 @@ func (h *OrderHandler) Checkout(c *gin.Context) {
 		"data":    order,
 	})
 }
+
+	// GET /v1/orders
+func (h *OrderHandler) GetOrders(c *gin.Context) {
+	// mengambil UID dari token yang sedang login
+	userID := c.MustGet("firebase_uid").(string)
+
+	orders, err := h.OrderService.GetMyOrders(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengambil riwayat pesanan"})
+		return
+	}
+
+	// mengirim JSON sukses ke Flutter
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Berhasil mengambil riwayat pesanan",
+		"data":    orders,
+	})
+}
