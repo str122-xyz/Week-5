@@ -17,29 +17,11 @@ func NewAuthHandler() *AuthHandler {
 }
 
 func (h *AuthHandler) VerifyToken(c *gin.Context) {
-	c.JSON(200, gin.H{
-		"success": true,
-		"message": "Login berhasil",
-		"data": gin.H{
-			"access_token": "dummy_token",
-			"token_type":   "Bearer",
-			"expires_in":   86400,
-			"user": gin.H{
-				"id":             1,
-				"firebase_uid":   "uid_google_dummy",
-				"email":          "satria@ngopss.com",
-				"name":           "Satria Herlambang",
-				"role":           "user",
-				"email_verified": true,
-				"created_at":     time.Now().Format(time.RFC3339),
-			},
-		},
-	})
-	
 	var req struct {
 		FirebaseToken string `json:"firebase_token" binding:"required"`
 	}
 
+	// 1. Cek format request
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
@@ -48,6 +30,7 @@ func (h *AuthHandler) VerifyToken(c *gin.Context) {
 		return
 	}
 
+	// 2. Verifikasi ke Firebase
 	jwtToken, user, err := h.authService.VerifyFirebaseToken(req.FirebaseToken)
 	if err != nil {
 		if err.Error() == "EMAIL NOT VERIFIED" {
@@ -66,6 +49,7 @@ func (h *AuthHandler) VerifyToken(c *gin.Context) {
 		return
 	}
 
+	// 3. Sukses, kirim data user asli
 	expireHours := 24
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
