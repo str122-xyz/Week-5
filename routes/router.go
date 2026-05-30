@@ -72,6 +72,7 @@ func SetupRouter() *gin.Engine {
 	{
 		orders.POST("/checkout", orderHandler.Checkout)
 		orders.GET("", orderHandler.GetOrders)
+		orders.GET("/:id", orderHandler.GetOrderByID)
 	}
 
 	// Create, Update, Delete hanya untuk admin

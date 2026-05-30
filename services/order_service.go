@@ -74,3 +74,18 @@ func (s *OrderService) GetMyOrders(userID string) ([]models.Order, error) {
 	
 	return orders, err
 }
+
+	// Mengambil detail satu pesanan berdasarkan Order ID dan User ID
+func (s *OrderService) GetOrderByID(orderID string, userID string) (*models.Order, error) {
+	var order models.Order
+	
+	err := config.DB.Preload("Items.Product").
+		Where("id = ? AND user_id = ?", orderID, userID).
+		First(&order).Error
+		
+	if err != nil {
+		return nil, errors.New("pesanan tidak ditemukan")
+	}
+	
+	return &order, nil
+}

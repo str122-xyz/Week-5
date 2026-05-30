@@ -53,3 +53,20 @@ func (h *OrderHandler) GetOrders(c *gin.Context) {
 		"data":    orders,
 	})
 }
+
+	// GET /v1/orders/:id
+func (h *OrderHandler) GetOrderByID(c *gin.Context) {
+	orderID := c.Param("id")
+	userID := c.MustGet("firebase_uid").(string)
+
+	order, err := h.OrderService.GetOrderByID(orderID, userID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Berhasil mengambil detail pesanan",
+		"data":    order,
+	})
+}
