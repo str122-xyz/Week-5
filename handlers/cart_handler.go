@@ -14,7 +14,7 @@ type CartHandler struct {
 
 // GET /v1/cart
 func (h *CartHandler) GetCart(c *gin.Context) {
-	userID := c.MustGet("UID").(string)
+	userID := c.MustGet("firebase_uid").(string)
 
 	cart, total, itemCount, err := h.CartService.GetCart(userID)
 	if err != nil {
@@ -33,7 +33,7 @@ func (h *CartHandler) GetCart(c *gin.Context) {
 
 // POST /v1/cart
 func (h *CartHandler) AddToCart(c *gin.Context) {
-	userID := c.MustGet("UID").(string)
+	userID := c.MustGet("firebase_uid").(string)
 
 	var req struct {
 		ProductID uint `json:"product_id"`
@@ -77,7 +77,7 @@ func (h *CartHandler) RemoveCartItem(c *gin.Context) {
 
 // DELETE /v1/cart
 func (h *CartHandler) ClearCart(c *gin.Context) {
-	userID := c.MustGet("UID").(string)
+	userID := c.MustGet("firebase_uid").(string)
 	h.CartService.ClearCart(userID)
 	c.JSON(http.StatusOK, gin.H{"message": "Keranjang dibersihkan"})
 }

@@ -29,7 +29,13 @@ func SetupRouter() *gin.Engine {
 	cartHandler := handlers.CartHandler{
 		CartService: cartService,
 	}
-
+	
+	// init order handler
+	orderService := services.NewOrderService(cartService) 
+	orderHandler := handlers.OrderHandler{
+		OrderService: orderService,
+	}
+	
 	// API v1 group
 	v1 := r.Group("/v1")
 
@@ -59,6 +65,12 @@ func SetupRouter() *gin.Engine {
 		cart.PUT("/:id", cartHandler.UpdateCartItem)
 		cart.DELETE("/:id", cartHandler.RemoveCartItem)
 		cart.DELETE("", cartHandler.ClearCart)
+	}
+
+	// Route Orders
+	orders := protected.Group("/orders")
+	{
+		orders.POST("/checkout", orderHandler.Checkout)
 	}
 
 	// Create, Update, Delete hanya untuk admin

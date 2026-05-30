@@ -46,6 +46,8 @@ func InitDatabase() {
 		&models.Product{},
 		&models.Cart{},
 		&models.CartItem{},
+		&models.Order{},
+		&models.OrderItem{},
 	)
 	if err != nil {
 		log.Fatalf("AutoMigrate gagal: %v", err)
