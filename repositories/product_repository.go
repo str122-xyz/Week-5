@@ -40,6 +40,13 @@ func (r *ProductRepository) FindByID(id uint) (*models.Product, error) {
 	return &product, result.Error
 }
 
+// Mengambil satu produk berdasarkan ID
+func (r *ProductRepository) GetProductByID(id string) (*models.Product, error) {
+	var product models.Product
+	err := config.DB.First(&product, id).Error
+	return &product, err
+}
+
 // Create menyimpan produk baru
 func (r *ProductRepository) Create(product *models.Product) error {
 	return config.DB.Create(product).Error

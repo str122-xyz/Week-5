@@ -3,21 +3,32 @@ package routes
 import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/str122-xyz/gin-firebase-backend/config"
 	"github.com/str122-xyz/gin-firebase-backend/handlers"
 	"github.com/str122-xyz/gin-firebase-backend/middleware"
+	"github.com/str122-xyz/gin-firebase-backend/repositories"
+	"github.com/str122-xyz/gin-firebase-backend/services"
 )
 
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
-	config := cors.DefaultConfig()
-	config.AllowAllOrigins = true
-	config.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
-	r.Use(cors.New(config))
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowAllOrigins = true
+	corsConfig.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
+	r.Use(cors.New(corsConfig))
 
-	// Init handlers
+	// init handlers & repositories (Product & Auth)
 	authHandler := handlers.NewAuthHandler()
 	productHandler := handlers.NewProductHandler()
+
+	// init handler cart
+	cartRepo := repositories.NewCartRepository(config.DB)
+	prodRepo := repositories.NewProductRepository()
+	cartService := services.NewCartService(cartRepo, prodRepo)
+	cartHandler := handlers.CartHandler{
+		CartService: cartService,
+	}
 
 	// API v1 group
 	v1 := r.Group("/v1")
@@ -31,15 +42,25 @@ func SetupRouter() *gin.Engine {
 	auth := v1.Group("/auth")
 	auth.POST("/verify-token", authHandler.VerifyToken)
 
-	// Products
+	// Products routes (public)
 	products := v1.Group("/products")
-    products.GET("", productHandler.GetAll)
-    products.GET("/:id", productHandler.GetByID)
+	products.GET("", productHandler.GetAll)
+	products.GET("/:id", productHandler.GetByID)
 
 	// Protected routes
 	protected := v1.Group("")
 	protected.Use(middleware.AuthMiddleware())
 	
+	// route cart
+	cart := protected.Group("/cart")
+	{
+		cart.GET("", cartHandler.GetCart)
+		cart.POST("", cartHandler.AddToCart)
+		cart.PUT("/:id", cartHandler.UpdateCartItem)
+		cart.DELETE("/:id", cartHandler.RemoveCartItem)
+		cart.DELETE("", cartHandler.ClearCart)
+	}
+
 	// Create, Update, Delete hanya untuk admin
 	adminProducts := products.Group("")
 	adminProducts.Use(middleware.AdminOnly())

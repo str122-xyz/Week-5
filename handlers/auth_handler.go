@@ -35,7 +35,6 @@ func (h *AuthHandler) VerifyToken(c *gin.Context) {
 			},
 		},
 	})
-	return
 	
 	var req struct {
 		FirebaseToken string `json:"firebase_token" binding:"required"`
